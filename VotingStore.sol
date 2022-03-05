@@ -1,33 +1,26 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
+import"./DataType.sol";
 
-contract VotingStore {
-
-    struct Candidate {
-        uint256 id;
-        bytes32 name;
-        bytes32 description;
-        bytes32 imageName;
-    }
-
-    struct VotingStatus {
-        uint256 id;
-        bytes32 name;
-        uint256 count;
-    }
+contract VotingStore is DataType {
 
     // data
     Candidate[] public candidates;
-    uint256 public id = 0;
+    uint256 public id;
     mapping(uint256 => uint256) public votingMap;
 
-    constructor() {}
+    uint256[] public idList;
+
+    constructor() {
+        id = 0;
+    }
 
     // fuction
     function setCandidates(Candidate[] memory _candidates) public {
         for(uint256 i = 0; i < _candidates.length; i++) {
             candidates.push(_candidates[i]);
+            idList.push(_candidates[i].id);
         }
     }
 
@@ -46,4 +39,12 @@ contract VotingStore {
     function getCountById(uint256 _id) public view returns(uint256) {
         return votingMap[_id];
     }
+
+    function getIdListLength() public view returns(uint256) {
+        return idList.length;
+    }
+    function getIdList() public view returns(uint256[] memory) {
+        return idList;
+    }
+    
 }
