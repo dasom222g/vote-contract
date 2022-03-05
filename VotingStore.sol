@@ -43,7 +43,7 @@ contract VotingStore {
         votingMap[_key] = _value;
     }
 
-    function getValueOfVotingMap(uint256 _id) public view returns(uint256) {
+    function getCountById(uint256 _id) public view returns(uint256) {
         return votingMap[_id];
     }
 }

@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import"./VotingStore.sol";
 
 contract Vote is ERC721Enumerable {
     // 후보자 초기화
@@ -23,28 +24,28 @@ contract Vote is ERC721Enumerable {
     }
     Candidate[] public candidates;
     uint256 public id = 0;
+
+    VotingStore public storeContract;
     
     // mapping 타입은 golang의 map타입으로 해시테이블 구조로 key값으로 데이터에 빠르게 접근
     mapping(uint256 => uint256) public votingMap; // { {"dasom": 3}, {"kelly": 5} }
 
-    constructor() ERC721("somiVote", "SV") {}
+    constructor(address _storeAddress) ERC721("somiVote", "SV") {
+        setStoreContract(_storeAddress);
+    }
+
+    // store연결
+    function setStoreContract(address _storeAddress) public {
+        storeContract = VotingStore(_storeAddress);
+    }
 
     // 후보자 생성
     function setCandidates(CandidateNoId[] memory _candidateList) public {
         Candidate[] memory data = new Candidate[](_candidateList.length);
-        VotingStatus[] memory votingStatusList = new VotingStatus[](_candidateList.length);
         for (uint256 i = 0; i < _candidateList.length; i++) {
             // set candidates
             id += 1;
-            data[i].id = id;
-            data[i].name = _candidateList[i].name;
-            data[i].description = _candidateList[i].description;
-            data[i].imageName = _candidateList[i].imageName;
-            
-            // set votingStatusList
-            votingStatusList[i].id = id;
-            votingStatusList[i].name = _candidateList[i].name;
-            votingStatusList[i].count = 0;
+            data[i] = Candidate(id, _candidateList[i].name, _candidateList[i].description, _candidateList[i].imageName);
             // candidates.push(data[i]);
         }
         // Store에 저장
