@@ -1,7 +1,6 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.7;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 contract Vote is ERC721Enumerable {
@@ -17,6 +16,11 @@ contract Vote is ERC721Enumerable {
         bytes32 description;
         bytes32 imageName;
     }
+    struct VotingStatus {
+        uint256 id;
+        bytes32 name;
+        uint256 count;
+    }
     Candidate[] public candidates;
     uint256 public id = 0;
     
@@ -28,14 +32,22 @@ contract Vote is ERC721Enumerable {
     // 후보자 생성
     function setCandidates(CandidateNoId[] memory _candidateList) public {
         Candidate[] memory data = new Candidate[](_candidateList.length);
+        VotingStatus[] memory votingStatusList = new VotingStatus[](_candidateList.length);
         for (uint256 i = 0; i < _candidateList.length; i++) {
+            // set candidates
             id += 1;
             data[i].id = id;
             data[i].name = _candidateList[i].name;
             data[i].description = _candidateList[i].description;
             data[i].imageName = _candidateList[i].imageName;
-            candidates.push(data[i]);
+            
+            // set votingStatusList
+            votingStatusList[i].id = id;
+            votingStatusList[i].name = _candidateList[i].name;
+            votingStatusList[i].count = 0;
+            // candidates.push(data[i]);
         }
+        // Store에 저장
     }
 
     // 전체 후보자 get
@@ -46,6 +58,7 @@ contract Vote is ERC721Enumerable {
     function vote(uint256 _id) public {
         require(validCandidate(_id), 'Not valid candidate.');
         votingMap[_id] += 1;
+        // Store에 저장
     }
 
     // 후보자 득표수 조회
@@ -56,6 +69,19 @@ contract Vote is ERC721Enumerable {
     {
         require(validCandidate(_id), 'Not valid candidate.');
         return votingMap[_id];
+    }
+
+    // 전체 후보자 조회
+    function getVotingStatusList() public view returns(VotingStatus[] memory) {
+        // Candidate[] memory candidates = 
+        VotingStatus[] memory votingStatusList = new VotingStatus[](candidates.length);
+        for(uint256 i = 0; i < candidates.length; i++) {
+            uint256 candidateId = candidates[i].id;
+            bytes32 name = candidates[i].name;
+            uint256 count = 1;
+            votingStatusList[i] = VotingStatus(candidateId, name, count);
+        }
+        return votingStatusList;
     }
 
     // 입력값 유효성 체크
