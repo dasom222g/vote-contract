@@ -6,9 +6,11 @@ import "./DataType.sol";
 
 contract Vote is DataType {
     VotingStore public store;
+    uint256 public EXPIRE_SECONDS;
 
     constructor(address _storeAddress) {
         setStoreContract(_storeAddress);
+        EXPIRE_SECONDS = 86400;
     }
 
     // store연결
@@ -37,6 +39,7 @@ contract Vote is DataType {
     // 각 후보자에 투표
     function vote(uint256 _id) public {
         require(validCandidate(_id), 'Not valid candidate.');
+        require(isValidVotingTime(msg.sender), 'Already voted. Impossible voting time.');
         store.setVotingMap(_id, store.getCountById(_id) + 1);
         store.setVotingTimeMap(msg.sender, block.timestamp);
     }
@@ -64,17 +67,19 @@ contract Vote is DataType {
         return votingStatusList;
     }
 
+    function isVoted(address _address) public view returns(bool) {
+        require(_address != address(0), 'Not valid address');
+        uint256 value = store.getVotingTimeMap(_address);
+        return value == 0 ? false : true;
+    }
+
     function isValidVotingTime(address _address) public view returns(bool) {
         require(_address != address(0), 'Not valid address');
-        uint256 startTime = store.getVotingTimeMap(_address);
-        uint256 checkIntervalTime = 5 minutes;
+        uint256 startTime = store.getVotingTimeMap(_address); // not exsist key (첫 투표일 경우) startTime은 0리턴됨
+        // uint256 checkIntervalTime = 5 minutes;
 
-        if (startTime == 0) {
-            // not exsist key (첫 투표일 경우)
-            return true;
-        }
-        // 투표시각로 부터 경과시간이 5분 이상이면 true 리턴
-        return (block.timestamp - startTime) >= checkIntervalTime;
+        // 투표시각로 부터 경과시간이 _checkSeconds 이상이면 true 리턴
+        return startTime == 0 ? true : (block.timestamp - startTime) >= EXPIRE_SECONDS;
     }
 
     function getRemaingSeconds(address _address) public view returns(uint256) {
@@ -82,10 +87,9 @@ contract Vote is DataType {
         uint256 startTime = store.getVotingTimeMap(_address);
         require(startTime != 0, 'Voting Not yet');
 
-        uint256 checkIntervalSecond = 300;
         // 경과시간 second단위로 return
         uint256 elapsedTime = block.timestamp - startTime;
-        uint256 remaingSeconds = checkIntervalSecond - elapsedTime;
+        uint256 remaingSeconds = EXPIRE_SECONDS - elapsedTime;
         require(remaingSeconds > 0, 'Already you can vote.');
         return remaingSeconds;
     }
