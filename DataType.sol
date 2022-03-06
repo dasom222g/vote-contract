@@ -8,7 +8,7 @@ contract DataType {
         bytes32 description;
         bytes32 imageName;
     }
-    
+
     struct Candidate {
         uint256 id;
         bytes32 name;
