@@ -4,20 +4,30 @@ pragma solidity ^0.8.0;
 import "./VotingStore.sol";
 import "./DataType.sol";
 
+// VotingStore 0xEff33E9d503d187ffCc329Cb223649888cc301E7
+// Vote  0x0DE85db441e8AE0dC1f15e0Cd487d43cD54758fb
+
 contract Vote is DataType {
     VotingStore public store;
     uint256 public EXPIRE_SECONDS;
+    address public storeAddress;
 
     constructor(address _storeAddress) {
         setStoreContract(_storeAddress);
-        EXPIRE_SECONDS = 86400;
+        EXPIRE_SECONDS = 300;
     }
 
     // store연결
     function setStoreContract(address _storeAddress) public {
         // 주소 빈값 체크
         require(_storeAddress != address(0), 'Not valid address');
+        storeAddress = _storeAddress;
         store = VotingStore(_storeAddress);
+    }
+
+    function getStoreAddress() public view returns(address) {
+        require(storeAddress != address(0), 'Not valid address');
+        return storeAddress;
     }
 
     // 후보자 생성
@@ -70,7 +80,7 @@ contract Vote is DataType {
     function isVoted(address _address) public view returns(bool) {
         require(_address != address(0), 'Not valid address');
         uint256 value = store.getVotingTimeMap(_address);
-        return value == 0 ? false : true;
+        return value != 0;
     }
 
     function isValidVotingTime(address _address) public view returns(bool) {
